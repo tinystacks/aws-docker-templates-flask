@@ -8,10 +8,9 @@ import uuid
 from boto3.dynamodb.conditions import Key
 
 app = Flask(__name__)
-dynamodb = boto3.resource('dynamodb')
+dynamodb  = boto3.resource('dynamodb')
 table = dynamodb.Table(os.environ.get('TABLE_NAME'))
 idp_client = boto3.client('cognito-idp')
-
 
 @app.route('/ping', methods=['GET'])
 def ping():
