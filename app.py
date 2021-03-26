@@ -1,5 +1,6 @@
 from flask import Flask
 from flask import request
+from flask import Response
 import boto3
 import os
 import datetime
@@ -27,11 +28,11 @@ def put():
             'content': request_data['content']
         }
     )
-    return ""
+    return make_response("")
     
 @app.route('/item', methods=['GET'])
 def get():
-    return str(table.scan()['Items'])
+    return make_response(str(table.scan()['Items']))
 
 @app.route('/authenticated-item', methods=['PUT'])
 def put_authenticated():
@@ -45,7 +46,7 @@ def put_authenticated():
             'content': request_data['content']
         }
     )
-    return ""
+    return make_response("")
 
 @app.route('/authenticated-item', methods=['GET'])
 def get_authenticated():
@@ -53,4 +54,10 @@ def get_authenticated():
     results = table.query(
         KeyConditionExpression=Key('userId').eq(user['Username'])
     )
-    return str(results["Items"])
+    return make_response(str(results["Items"]))
+
+def make_response(rv):
+    resp = Response(rv)
+    resp.headers['Access-Control-Allow-Origin'] = '*'
+    resp.headers['Access-Control-Allow-Credentials'] = 'true'
+    return resp
