@@ -33,6 +33,17 @@ def put():
 def get():
     return make_response(str(table.scan()['Items']))
 
+@app.route('/item', methods=['DELETE'])
+def delete():
+    request_data = request.get_json()
+    table.delete_item(
+        Key={
+            'userId': "SYSTEM",
+            'itemId': str(uuid.uuid4()),
+        }
+    )
+    return make_response("")
+
 @app.route('/authenticated-item', methods=['PUT'])
 def put_authenticated():
     request_data = request.get_json()
