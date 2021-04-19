@@ -9,7 +9,7 @@ from boto3.dynamodb.conditions import Key
 
 app = Flask(__name__)
 dynamodb  = boto3.resource('dynamodb')
-table = dynamodb.Table(os.environ.get('TABLE_NAME'))
+table = dynamodb.Table(os.environ.get('TABLE_NAME', 'TableNameEnvVarNotSet'))
 idp_client = boto3.client('cognito-idp')
 
 @app.route('/ping', methods=['GET'])
