@@ -13,5 +13,5 @@ RUN python3 -m venv venv
 # RUN flask init-db
 
 # run server
-EXPOSE 8000
-CMD gunicorn --bind 0.0.0.0:8000 wsgi:app
+EXPOSE 80
+CMD gunicorn --bind 0.0.0.0:80 wsgi:app
