@@ -5,12 +5,14 @@ import boto3
 import os
 import datetime
 import uuid
+import json
 from boto3.dynamodb.conditions import Key
 
 app = Flask(__name__)
 dynamodb  = boto3.resource('dynamodb')
 table = dynamodb.Table(os.environ.get('TABLE_NAME', 'TableNameEnvVarNotSet'))
 idp_client = boto3.client('cognito-idp')
+local_items = []
 
 @app.route('/ping', methods=['GET'])
 def ping():
@@ -18,6 +20,18 @@ def ping():
 
 @app.route('/item', methods=['PUT'])
 def put():
+    request_data = request.get_json()
+    print(request_data['title'])
+    item = {'title': request_data['title'], 'content': request_data['content']}
+    local_items.append(item)
+    return make_response("")
+    
+@app.route('/item', methods=['GET'])
+def get():
+    return make_response(json.dumps(local_items))
+
+@app.route('/db-item', methods=['PUT'])
+def put_db_item():
     request_data = request.get_json()
     table.put_item(
         Item={
@@ -29,12 +43,12 @@ def put():
     )
     return make_response("")
     
-@app.route('/item', methods=['GET'])
-def get():
+@app.route('/db-item', methods=['GET'])
+def get_db_items():
     return make_response(str(table.scan()['Items']))
 
-@app.route('/item', methods=['DELETE'])
-def delete():
+@app.route('/db-item', methods=['DELETE'])
+def delete_db_item():
     request_data = request.get_json()
     table.delete_item(
         Key={
