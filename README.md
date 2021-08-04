@@ -74,7 +74,7 @@ To test out the sample application directly before you package it into a Dockerf
 python -m venv venv
 ```
 
-Next, activate your virtual environment and run the Flask application.
+Next, activate your virtual environment and run the Flask application. (Note: You only need to define the variables AWS_PROFILE and TABLE_NAME if you plan to test the endpoints that store data in a DynamoDB table. Otherwise, these can be omitted.)
 
 On Linux:
 
@@ -136,3 +136,9 @@ The return result will be the same item but with a UUID that serves as its index
 The sample application can store items as full JSON files in a DynamoDB table. The name of the table used is retrieved from the environment variable `TABLE_NAME`. 
 
 To write to DynamoDB, the application must be running in a context in which it has been granted permissions to access the DynamoDB table.
+
+### Dockerfile
+
+The Dockerfile copies the sample application into a Docker image and runs a Flask server. 
+
+A Dockerfile uses a Docker base image stored in a public Docker repoistory and then adds functionality to the image required by your application. This project's Dockerfile is based on the 
