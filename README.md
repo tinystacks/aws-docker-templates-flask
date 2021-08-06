@@ -1,4 +1,4 @@
-## AWS Docker Templates - Express
+## AWS Docker Templates - Flask
 
 The AWS Docker Templates for Flask from TinyStacks enable launching a [Flask]() application as a Docker container using an AWS CodePipeline pipeline. The template includes its own small Flask sample application, enabling developers to start a new Flask project immediately. Developers can also take the AWS CodePipeline-specific files in this template and use them to ship an existing Flask application as a Docker image on AWS. 
 
@@ -39,7 +39,7 @@ This sample contains the following files:
 * A sample Flask API, defined in the app.py file. 
 * A Dockerfile that builds the Flask file as a Docker image. 
 * A requirements.txt file that defines the libraries your Flask application will require when installed inside of Docker. 
-* A wsgi.py file for running your Flask application under the gunicorn server on your Docker image.
+* A wsgi.py file for running your Flask application under the Gunicorn server on your Docker image.
 * A `build.yml` file for AWS CodeBuild that builds the image and pushes it to Amazon Elastic Container Registry (ECR). 
 * A `release.yml` file for AWS CodeBuild that deploys the image stored in ECR to a Amazon Elastic Container Service (ECS) cluster. 
 
@@ -55,7 +55,7 @@ The file `app.py` defines the REST API endpoints for the application. There are 
 | ------------- | ------------- |
 | `/item`  | Stores the Item in memory. |
 | `/db-item`  | Stores the item in an AWS DynamoDB table.  |
-| `/authenticated-item`  | Like `/db-item`, but requires that the API user be logged in with an Amazon Cognity Identity. All records saved with this API are saved with the user's Cognito ID. When performing read and update operations with this API, users can only access the records that they created. |
+| `/authenticated-item`  | Like `/db-item`, but requires that the API user be logged in with an Amazon Cognito Identity. All records saved with this API are saved with the user's Cognito ID. When performing read and update operations with this API, users can only access the records that they created. |
 
 The server uses the same endpoint for all CRUD operations, distinguishing between them with HTTP verbs: 
 
@@ -118,7 +118,7 @@ To add an item in memory, call the `/item` endpoint with an HTTP PUT verb. This 
 curl -H "Content-Type: application/json" -X PUT -d '{"title":"my title", "content" : "my content"}' "http://127.0.0.1/item"
 ```
 
-On Windows Powershell, use Invoke-WebRequest: 
+On Windows Powershell, use `Invoke-WebRequest`: 
 
 ```powershell
 $item = @{
@@ -141,4 +141,103 @@ To write to DynamoDB, the application must be running in a context in which it h
 
 The Dockerfile copies the sample application into a Docker image and runs a Flask server. 
 
-A Dockerfile uses a Docker base image stored in a public Docker repoistory and then adds functionality to the image required by your application. This project's Dockerfile is based on the 
+A Dockerfile uses a Docker base image stored in a public Docker repoistory and then adds functionality to the image required by your application. This project's Dockerfile is derived from [Bitnami's Python 3.6 image](https://gallery.ecr.aws/bitnami/python), which is freely available on the [Amazon ECR Public Gallery](https://gallery.ecr.aws/). The Dockerfile performs the following steps: 
+
+* Copies the Flask application into a working directory on the Docker image. 
+* Installs the contents of the requirements.txt file using pip. Requirements.txt contains a list of the Python modules that are required to run your Flask application. The current configuration installs boto3 (the Python AWS library) for connectivity to DynamoDB; Flask; and gunicorn, a lightweight [WSGI](https://en.wikipedia.org/wiki/Web_Server_Gateway_Interface) server for hosting Flask. 
+* Starts Gunicorn on the container. 
+
+If you have Docker installed, you can build and try out the sample application locally. Open a command prompt to the directory containing the Dockerfile and run the following command: 
+
+```
+docker build -t tinystacks/flask-crud-app:latest .
+```
+
+Once built, run the Docker command locally, mapping port 8080 on your host machine to port 80 on the container: 
+
+```
+docker run -p 8080:80 -d tinystacks/flask-crud-app:latest
+```
+
+To test that the server is running, test its `/ping` endpoint from the command line. This time, you will change the port to 8080 to test that it's running from the running Docker container: 
+
+```
+curl http://127.0.0.1:8080/ping
+```
+
+If the server is running, this call will return an HTTP 200 (OK) result code. 
+
+### Build Template
+
+The `build.yml` file is an AWS CodeBuild file that builds your Dockerfile and publishes the output to an Amazon ECR registry. 
+
+To publish to Amazon ECR, the build script first needs to obtain login credentials to the cluster. It does this using a combination of the AWS CLI command `aws ecr get-login-password` and the `docker login` command. After authentication, the script then builds your Docker image, names it, and tags it with the name `latest` to mark it as the most recent build. Finally, it performs a `docker push`, publishing the new Docker image to your Amazon ECR Docker repository.
+
+```yml
+version: 0.2
+phases:
+  build:
+    commands:
+      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_ENDPOINT
+      - docker build -t builtimage .
+      - docker tag builtimage:latest $ECR_IMAGE_URL:latest
+      - docker push $ECR_IMAGE_URL:latest
+```
+
+To run this in AWS CodeBuild, your build pipeline needs to define the following environment variables: 
+
+* **ECR_ENDPOINT**: The name of the Amazon ECR repository to publish to. This variable takes the format: *<accountnumber>*.dkr.ecr.*<aws-region>*.amazonaws.com
+* **ECR_IMAGE_URL**: The name of the Amazon ECR repository plus the name of the container you are publishing. This should take the format: *<accountnumber>*.dkr.ecr.*<aws-region>*.amazonaws.com/aws-docker-flask
+
+The variable `AWS_REGION` is a default global variable that will default to the same AWS region in which your build pipeline is defined. If you need to publish to an Amazon ECR repository in another region, modify this script to use a custom environment variable specifying the correct region. For more information on environment variables, see [Environment variables in build environments](https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-env-vars.html) on the AWS Web site. 
+
+### Release Template
+
+The `release.yml` file is another AWS CodeBuild file that takes the build output from the `build.yml` files (a Docker container image in an Amazon ECR repository) and runs it within an Amazon ECS cluster to which the pipeline has access. 
+
+After logging in to the ECR repository using the `docker login` command, the script pulls down the image that was compiled and changes its tag from the name of the previous build to the name of the new build. Once the container's label has been updated, the script updates a defined service in Amazon ECS that pulls its image from our published Docker container. 
+
+```yaml
+version: 0.2
+phases:
+  build:
+    commands:
+      - aws ecr get-login-password | docker login --username AWS --password-stdin $ECR_ENDPOINT
+      - docker pull $ECR_IMAGE_URL:$PREVIOUS_STAGE_NAME
+      - docker tag $ECR_IMAGE_URL:$PREVIOUS_STAGE_NAME $ECR_IMAGE_URL:$STAGE_NAME
+      - docker push $ECR_IMAGE_URL:$STAGE_NAME
+      - aws ecs update-service --service $SERVICE_NAME --cluster $CLUSTER_ARN --force-new-deployment
+```
+
+In addition to the variables discussed for `build.yml`, `release.yml` requires several environment variables defined in order to run: 
+
+* **PREVIOUS_STAGE_NAME**: The previous build number or build stage name. This should be the previous Docker image tag name generated by the previous build.
+* **STAGE_NAME**: The current build number or build stage name you wish to use (e.g., `latest`). 
+* **SERVICE_NAME**: The name of the Amazon ECS service to run. You will need to define this service yourself once you have the URI to your published container. 
+* **CLUSTER_ARN**: The name of the cluster within your Amazon ECS service to which the release script will deploy the container. This should be the name of a custer that is running one or more instances of the service referenced by `SERVICE_NAME`. 
+
+## Getting Started
+
+### Existing Project
+
+If you already have an existing Flask application, you can use the core files included in this sample to run them on a Docker container in AWS. Make sure to use your own existing requirements.txt file if you have one. 
+
+If your project is already Dockerized (i.e., it has its own Dockerfile), then simply copy over the `build.yml` and `release.yml` files into the root of your existing project. 
+
+If your project is not Dockerized, you will also need to copy over the Dockerfile included in this sample. You may need to change the path to your application's source and to its configuration files (the `package*.json` and `tsconfig.json` files) in the Dockerfile itself to reflect your project's file paths: 
+
+```Dockerfile
+COPY package*.json ./
+COPY tsconfig.json ./
+COPY src ./src
+```
+
+If your application uses a different port than port 80, you will also need to update the `EXPOSE` line in the Dockerfile to use a different port:
+
+```Dockerfile
+EXPOSE 80
+```
+
+## Known Limitations
+
+The container runs Gunicorn directly, which is not recommended in a production setting. The recommended production configuration is to [run Gunicorn behind a reverse proxy such as Nginx](https://docs.gunicorn.org/en/stable/deploy.html) to prevent potential denial of service attacks. 
