@@ -26,7 +26,7 @@ This solution makes use of a Docker image that comes with a Flask environment pr
 
 This document also assumes that you have access to an AWS account. If you do not have one, [create one before getting started](https://aws.amazon.com/premiumsupport/knowledge-center/create-and-activate-aws-account/).
 
-If executed locally, the use of AWS DynamoDB and Amazon Cognito in the Flask application will require that you have valid credentials for AWS saved on your local computer. We recommend configuring your credentials locally as a login profile and using the `AWS_PROFILE` environment variable to designate which set of credentials to use. For other options on setting AWS credentials, see [Setting Credentials in Node.js](https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/setting-credentials-node.html).
+Since Flask is written in Python, this application uses [the AWS SDK for Python (Boto3)](https://aws.amazon.com/sdk-for-python/) to connect with AWS services. If executed locally, the use of AWS DynamoDB and Amazon Cognito in the Flask application will require that you have valid credentials for AWS saved on your local computer. We recommend configuring your credentials locally as a login profile and using the `AWS_PROFILE` environment variable to designate which set of credentials to use. For other options on setting AWS credentials, see the AWS documentation on [setting credentials in Boto3](https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html).
 
 Further prerequisites for running these templates on AWS are provided below.
 
@@ -224,15 +224,7 @@ If you already have an existing Flask application, you can use the core files in
 
 If your project is already Dockerized (i.e., it has its own Dockerfile), then simply copy over the `build.yml` and `release.yml` files into the root of your existing project. 
 
-If your project is not Dockerized, you will also need to copy over the Dockerfile included in this sample. You may need to change the path to your application's source and to its configuration files (the `package*.json` and `tsconfig.json` files) in the Dockerfile itself to reflect your project's file paths: 
-
-```Dockerfile
-COPY package*.json ./
-COPY tsconfig.json ./
-COPY src ./src
-```
-
-If your application uses a different port than port 80, you will also need to update the `EXPOSE` line in the Dockerfile to use a different port:
+If your project is not Dockerized, you will also need to copy over the Dockerfile included in this sample. If your application uses a different port than port 80, you will also need to update the `EXPOSE` line in the Dockerfile to use a different port:
 
 ```Dockerfile
 EXPOSE 80
