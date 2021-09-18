@@ -1,6 +1,6 @@
 ## AWS Docker Templates - Flask
 
-The AWS Docker Templates for Flask from TinyStacks enable launching a [Flask]() application as a Docker container using an AWS CodePipeline pipeline. The template includes its own small Flask sample application, enabling developers to start a new Flask project immediately. Developers can also take the AWS CodePipeline-specific files in this template and use them to ship an existing Flask application as a Docker image on AWS. 
+The AWS Docker Templates for Flask from TinyStacks enable launching a [Flask](https://flask.palletsprojects.com/en/2.0.x/) application as a Docker container using an AWS CodePipeline pipeline. The template includes its own small Flask sample application, enabling developers to start a new Flask project immediately. Developers can also take the AWS CodePipeline-specific files in this template and use them to ship an existing Flask application as a Docker image on AWS. 
 
 ## License
 
