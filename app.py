@@ -9,9 +9,18 @@ import json
 from boto3.dynamodb.conditions import Key
 
 app = Flask(__name__)
-dynamodb  = boto3.resource('dynamodb')
-table = dynamodb.Table(os.environ.get('TABLE_NAME', 'TableNameEnvVarNotSet'))
-idp_client = boto3.client('cognito-idp')
+
+def dynamodb_client():
+  if (dynamodb == none):
+    dynamodb = boto3.resource('dynamodb')
+    table = dynamodb_client.Table(os.environ.get('TABLE_NAME', 'TableNameEnvVarNotSet'))
+  return dynamodb
+
+def cognito_client():
+  if (cognito == none):
+    cognito = boto3.client('cognito-idp')
+  return cognito
+
 local_items = []
 
 @app.route('/ping', methods=['GET'])

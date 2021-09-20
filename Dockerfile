@@ -1,10 +1,12 @@
 FROM public.ecr.aws/bitnami/python:3.6
+# FROM public.ecr.aws/compose-x/python:3.7
 
 # Create app directory
 WORKDIR /
 
 # Bundle app source
 COPY . .
+RUN rm -rf venv
 
 # Install app dependencies
 RUN pip install -r requirements.txt
