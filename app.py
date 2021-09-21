@@ -27,12 +27,16 @@ def cognito_client():
 
 local_items = []
 
+@app.route('/', methods=['GET'])
+def get():
+    return ""
+
 @app.route('/ping', methods=['GET'])
 def ping():
     return ""
 
 @app.route('/item', methods=['PUT'])
-def put():
+def put_item():
     request_data = request.get_json()
     print(request_data['title'])
     item = {'title': request_data['title'], 'content': request_data['content']}
@@ -40,7 +44,7 @@ def put():
     return make_response("")
     
 @app.route('/item', methods=['GET'])
-def get():
+def get_item():
     return make_response(json.dumps(local_items))
 
 @app.route('/db-item', methods=['PUT'])
