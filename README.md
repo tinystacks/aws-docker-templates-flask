@@ -186,8 +186,8 @@ phases:
 
 To run this in AWS CodeBuild, your build pipeline needs to define the following environment variables: 
 
-* **ECR_ENDPOINT**: The name of the Amazon ECR repository to publish to. This variable takes the format: *<accountnumber>*.dkr.ecr.*<aws-region>*.amazonaws.com
-* **ECR_IMAGE_URL**: The name of the Amazon ECR repository plus the name of the container you are publishing. This should take the format: *<accountnumber>*.dkr.ecr.*<aws-region>*.amazonaws.com/aws-docker-flask
+* **ECR_ENDPOINT**: The name of the Amazon ECR repository to publish to. This variable takes the format: *&lt;accountnumber&gt;*.dkr.ecr.*&lt;aws-region&gt;*.amazonaws.com
+* **ECR_IMAGE_URL**: The name of the Amazon ECR repository plus the name of the container you are publishing. This should take the format: *&lt;accountnumber&gt;*.dkr.ecr.*&lt;aws-region&gt;*.amazonaws.com/aws-docker-flask
 
 The variable `AWS_REGION` is a default global variable that will default to the same AWS region in which your build pipeline is defined. If you need to publish to an Amazon ECR repository in another region, modify this script to use a custom environment variable specifying the correct region. For more information on environment variables, see [Environment variables in build environments](https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-env-vars.html) on the AWS Web site. 
 
