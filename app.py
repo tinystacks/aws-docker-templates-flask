@@ -9,17 +9,34 @@ import json
 from boto3.dynamodb.conditions import Key
 
 app = Flask(__name__)
-dynamodb  = boto3.resource('dynamodb')
-table = dynamodb.Table(os.environ.get('TABLE_NAME', 'TableNameEnvVarNotSet'))
-idp_client = boto3.client('cognito-idp')
+dynamodb_client = None
+table = None
+
+def dynamodb_table():
+  global dynamodb_client
+  global table
+  if (dynamodb_client == None):
+    dynamodb_client = boto3.resource('dynamodb')
+    table = dynamodb_client.Table(os.environ.get('TABLE_NAME', 'TableNameEnvVarNotSet'))
+  return table
+
+def cognito_client():
+  if (cognito == none):
+    cognito = boto3.client('cognito-idp')
+  return cognito
+
 local_items = []
+
+@app.route('/', methods=['GET'])
+def get():
+    return ""
 
 @app.route('/ping', methods=['GET'])
 def ping():
     return ""
 
 @app.route('/item', methods=['PUT'])
-def put():
+def put_item():
     request_data = request.get_json()
     print(request_data['title'])
     item = {'title': request_data['title'], 'content': request_data['content']}
@@ -27,13 +44,13 @@ def put():
     return make_response("")
     
 @app.route('/item', methods=['GET'])
-def get():
+def get_item():
     return make_response(json.dumps(local_items))
 
 @app.route('/db-item', methods=['PUT'])
 def put_db_item():
     request_data = request.get_json()
-    table.put_item(
+    dynamodb_table().put_item(
         Item={
             'userId': "SYSTEM",
             'itemId': str(uuid.uuid4()),
@@ -45,12 +62,13 @@ def put_db_item():
     
 @app.route('/db-item', methods=['GET'])
 def get_db_items():
-    return make_response(str(table.scan()['Items']))
+    # return boto3.client('dynamodb').list_tables()
+    return make_response(str(dynamodb_table().scan()['Items']))
 
 @app.route('/db-item', methods=['DELETE'])
 def delete_db_item():
     request_data = request.get_json()
-    table.delete_item(
+    dynamodb_table().delete_item(
         Key={
             'userId': "SYSTEM",
             'itemId': str(uuid.uuid4()),
@@ -61,8 +79,8 @@ def delete_db_item():
 @app.route('/authenticated-item', methods=['PUT'])
 def put_authenticated():
     request_data = request.get_json()
-    user = idp_client.get_user(AccessToken=request.headers['authorization'].split(' ')[1])
-    table.put_item(
+    user = cognito_client.get_user(AccessToken=request.headers['authorization'].split(' ')[1])
+    dynamodb_table().put_item(
         Item={
             'userId': user['Username'],
             'itemId': str(uuid.uuid4()),
@@ -74,8 +92,8 @@ def put_authenticated():
 
 @app.route('/authenticated-item', methods=['GET'])
 def get_authenticated():
-    user = idp_client.get_user(AccessToken=request.headers['authorization'].split(' ')[1])
-    results = table.query(
+    user = cognito_client.get_user(AccessToken=request.headers['authorization'].split(' ')[1])
+    results = dynamodb_table().query(
         KeyConditionExpression=Key('userId').eq(user['Username'])
     )
     return make_response(str(results["Items"]))
