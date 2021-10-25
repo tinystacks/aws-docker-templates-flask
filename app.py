@@ -10,16 +10,10 @@ from flask_sqlalchemy import SQLAlchemy
 # App Initialization
 app = Flask(__name__)
 
-# POSTGRES Integration
+app.config.from_pyfile('./config/appconfig.cfg')
+CONF = f"postgresql://{app.config['PG_USER']}:{app.config['PG_PASSWORD']}@{app.config['PG_HOST']}:{app.config['PG_PORT']}/{app.config ['PG_DATABASE']}"
+app.config['SQLALCHEMY_DATABASE_URI'] = CONF
 
-# Postgres Environment variables
-USER = os.environ.get('PG_USER','postgres')
-PASS = os.environ.get('PG_PASSWORD','postgres')
-HOST = os.environ.get('PG_HOST','db')
-PORT = os.environ.get('PG_PORT',5432)
-DATABASE = os.environ.get('PG_DATABASE','postgres')
-
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://'+USER+':'+PASS+'@'+HOST+':'+ PORT +'/'+ DATABASE
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.secret_key = 'secret'
 db = SQLAlchemy(app)
