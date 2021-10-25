@@ -1,0 +1,31 @@
+version: "3.9"
+   
+services:
+  flaskapp:
+    container_name: flaskapp
+    image: francescoxx/flask-docker:1.0.0
+    build: .
+    environment:
+      - PG_DATABASE=postgres
+      - PG_USER=postgres
+      - PG_PASSWORD=postgres
+      - PG_HOST=db
+      - PG_PORT=5432
+    ports:
+      - "80:80"
+    depends_on:
+      - db
+  db:
+    container_name: db
+    image: postgres
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5432:5432"
+    volumes: 
+      - pgdata1:/var/lib/postgresql/data
+
+volumes:
+  pgdata1: {}

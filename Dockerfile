@@ -1,19 +1,21 @@
+# FROM python:3.6
 FROM public.ecr.aws/bitnami/python:3.6
-# FROM public.ecr.aws/compose-x/python:3.7
 
 # Create app directory
-WORKDIR /
+WORKDIR /app
 
-# Bundle app source
-COPY . .
-RUN rm -rf venv
+# Copy the requirements file
+COPY requirements.txt .
 
 # Install app dependencies
 RUN pip install -r requirements.txt
-RUN python3 -m venv venv
-# RUN source venv/bin/activate
-# RUN flask init-db
 
-# run server
+# start the virtual environment
+RUN python3 -m venv venv
+
+# Copy the whole folder inside the Image filesystem
+COPY . .
+
 EXPOSE 80
+
 CMD gunicorn --bind 0.0.0.0:80 wsgi:app
