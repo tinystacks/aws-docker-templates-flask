@@ -137,6 +137,28 @@ The sample application can store items as full JSON files in a DynamoDB table. T
 
 To write to DynamoDB, the application must be running in a context in which it has been granted permissions to access the DynamoDB table.
 
+#### Adding an Item to the Postgres table
+
+This sample application can store new data in an existing Postges Database.
+
+To run proprely, please use these environment variables:
+
+PG_DATABASE=<database_name>
+PG_USER=<postgres_user>
+PG_PASSWORD=<postgres_password>
+PG_HOST=<postgres_host>
+PG_PORT=<postgres_port>
+
+to get all the items:
+```
+curl --location --request GET '127.0.0.1:80/postgres-item' 
+```
+
+an example to create a new item:
+```
+curl --location --request POST 'localhost:80/postgres-item' --header 'Content-Type: application/json' --data-raw '{"title":"theTitle","content":"theContent"}'
+```
+
 ### Dockerfile
 
 The Dockerfile copies the sample application into a Docker image and runs a Flask server. 
