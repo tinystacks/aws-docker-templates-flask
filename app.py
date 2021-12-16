@@ -10,8 +10,15 @@ from flask_sqlalchemy import SQLAlchemy
 # App Initialization
 app = Flask(__name__)
 
-app.config.from_pyfile('./config/appconfig.cfg')
-CONF = f"postgresql://{app.config['PG_USER']}:{app.config['PG_PASSWORD']}@{app.config['PG_HOST']}:{app.config['PG_PORT']}/{app.config ['PG_DATABASE']}"
+# app.config.from_pyfile('./config/appconfig.cfg')
+
+pg_user = os.environ.get("PG_USERNAME")
+pg_password = os.environ.get("PG_PASSWORD")
+pg_host = os.environ.get("PG_HOST")
+pg_port = os.environ.get("PG_PORT")
+pg_database = os.environ.get("PG_DATABASE")
+
+CONF = f"postgresql://{pg_user}:{pg_password}@{pg_host}:{pg_port}/{pg_database}"
 app.config['SQLALCHEMY_DATABASE_URI'] = CONF
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -49,11 +56,11 @@ local_items = []
 
 @app.route('/', methods=['GET'])
 def get():
-    return ""
+    return "hello world!"
 
 @app.route('/ping', methods=['GET'])
 def ping():
-    return ""
+    return "pong"
 
 @app.route('/postgres-item', methods=['GET'])
 def itemget():
@@ -90,7 +97,13 @@ def update_item():
 def delete_item():
     return "delete_item"
 
-@app.route('/item', methods=['PUT'])
+# Get All items
+@app.route('/local-item', methods=['GET'])
+def get_item():
+    return make_response(json.dumps(local_items))
+
+# Create a new item
+@app.route('/local-item', methods=['POST'])
 def put_item():
     request_data = request.get_json()
     print(request_data['title'])
@@ -98,11 +111,7 @@ def put_item():
     local_items.append(item)
     return make_response("")
     
-@app.route('/item', methods=['GET'])
-def get_item():
-    return make_response(json.dumps(local_items))
-
-@app.route('/db-item', methods=['PUT'])
+@app.route('/dynamodb-item', methods=['PUT'])
 def put_db_item():
     request_data = request.get_json()
     dynamodb_table().put_item(
@@ -115,11 +124,11 @@ def put_db_item():
     )
     return make_response("")
     
-@app.route('/db-item', methods=['GET'])
+@app.route('/dynamodb-item', methods=['GET'])
 def get_db_items():
     return make_response(str(dynamodb_table().scan()['Items']))
 
-@app.route('/db-item', methods=['DELETE'])
+@app.route('/dynamodb-item', methods=['DELETE'])
 def delete_db_item():
     request_data = request.get_json()
     dynamodb_table().delete_item(
@@ -129,28 +138,6 @@ def delete_db_item():
         }
     )
     return make_response("")
-
-@app.route('/authenticated-item', methods=['PUT'])
-def put_authenticated():
-    request_data = request.get_json()
-    user = cognito_client.get_user(AccessToken=request.headers['authorization'].split(' ')[1])
-    dynamodb_table().put_item(
-        Item={
-            'userId': user['Username'],
-            'itemId': str(uuid.uuid4()),
-            'title': request_data['title'],
-            'content': request_data['content']
-        }
-    )
-    return make_response("")
-
-@app.route('/authenticated-item', methods=['GET'])
-def get_authenticated():
-    user = cognito_client.get_user(AccessToken=request.headers['authorization'].split(' ')[1])
-    results = dynamodb_table().query(
-        KeyConditionExpression=Key('userId').eq(user['Username'])
-    )
-    return make_response(str(results["Items"]))
 
 def make_response(rv):
     resp = Response(rv)
