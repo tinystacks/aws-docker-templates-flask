@@ -63,7 +63,7 @@ def ping():
     return "pong"
 
 @app.route('/healthy', methods=['GET'])
-def ping():
+def healthy():
     return "healthy"
 
 @app.route('/postgres-item', methods=['GET'])
