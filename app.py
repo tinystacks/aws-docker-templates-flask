@@ -62,6 +62,10 @@ def get():
 def ping():
     return "pong"
 
+@app.route('/healthy', methods=['GET'])
+def ping():
+    return "healthy"
+
 @app.route('/postgres-item', methods=['GET'])
 def itemget():
     query = '''CREATE TABLE if not exists item(id serial PRIMARY KEY, title VARCHAR (200) UNIQUE NOT NULL, content VARCHAR (200) NOT NULL);'''
