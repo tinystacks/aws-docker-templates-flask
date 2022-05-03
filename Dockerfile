@@ -1,5 +1,7 @@
 # FROM python:3.6
 FROM public.ecr.aws/bitnami/python:3.6
+COPY --from=public.ecr.aws/tinystacks/secret-env-vars-wrapper:latest-x86 /opt /opt
+COPY --from=public.ecr.aws/awsguru/aws-lambda-adapter:0.3.2-x86_64 /lambda-adapter /opt/extensions/lambda-adapter
 
 # Create app directory
 WORKDIR /app
@@ -16,6 +18,6 @@ RUN python3 -m venv venv
 # Copy the whole folder inside the Image filesystem
 COPY . .
 
-EXPOSE 80
+EXPOSE 8000
 
-CMD gunicorn --bind 0.0.0.0:80 wsgi:app
+CMD /opt/tinystacks-secret-env-vars-wrapper gunicorn --bind 0.0.0.0:8000 wsgi:app
