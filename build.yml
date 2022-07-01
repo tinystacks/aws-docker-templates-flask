@@ -5,4 +5,6 @@ phases:
       - aws ecr get-login-password | docker login --username AWS --password-stdin $ECR_ENDPOINT
       - docker build -t builtimage .
       - docker tag builtimage:latest $ECR_IMAGE_URL:latest
+      - docker tag builtimage:latest $ECR_IMAGE_URL:$(git rev-parse HEAD)
       - docker push $ECR_IMAGE_URL:latest
+      - docker push $ECR_IMAGE_URL:$(git rev-parse HEAD)
