@@ -10,6 +10,8 @@ WORKDIR /app
 COPY requirements.txt .
 
 # Install app dependencies
+RUN apt-get update
+RUN echo Y | apt-get install libpq-dev python-dev
 RUN pip install -r requirements.txt
 
 # start the virtual environment
